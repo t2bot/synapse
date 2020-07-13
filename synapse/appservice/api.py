@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
+import time
 import urllib
 from typing import TYPE_CHECKING, List, Optional, Tuple
 
@@ -222,6 +223,10 @@ class ApplicationServiceApi(SimpleHttpClient):
 
         uri = service.url + ("/transactions/%s" % urllib.parse.quote(str(txn_id)))
 
+        if len(events) == 0:
+            logger.info("Returning early on transaction: no events to send")
+            return True
+
         # Never send ephemeral events to appservices that do not support it
         if service.supports_ephemeral:
             body = {"events": events, "de.sorunome.msc2409.ephemeral": ephemeral}
@@ -243,6 +248,23 @@ class ApplicationServiceApi(SimpleHttpClient):
         return False
 
     def _serialize(self, service, events):
+        new_events = []
+        for event in events:
+            logger.info(event)
+            if int(round(time.time() * 1000)) - event.get("origin_server_ts", 0) > (15 * 60 * 1000):
+                logger.warning("Dropping event (due to age) %s from appservice push_bulk" % event)
+                continue
+            if event.get("sender", "") == "@freenode_freenode-connect:matrix.org":
+                logger.warning("Dropping event (due to freenode-connect) %s from appservice push_bulk" % event)
+                continue
+            if service.is_interested_in_user(event.get("sender", "")) and event.get("sender", "").endswith(":t2bot.io"):
+                logger.warning("Dropping event (due to echo) %s from appservice push_bulk" % event)
+                continue
+            if event.get("content", {}).get("reason", "").endswith(": err_needreggednick") and event.get("sender", "") == "@appservice-irc:matrix.org":
+                logger.warning("Dropping event (due to err_needreggednick) %s from appservice push_bulk" % event)
+                continue
+            logger.info("Allowing @ fallback: %s" % event)
+            new_events.append(event)
         time_now = self.clock.time_msec()
         return [
             serialize_event(
@@ -255,5 +277,5 @@ class ApplicationServiceApi(SimpleHttpClient):
                     and service.is_interested_in_user(e.state_key)
                 ),
             )
-            for e in events
+            for e in new_events
         ]
