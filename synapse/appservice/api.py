@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
+import time
 import urllib.parse
 from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Mapping, Optional, Tuple
 
@@ -308,6 +309,10 @@ class ApplicationServiceApi(SimpleHttpClient):
                     "left": list(device_list_summary.left),
                 }
 
+        if len(serialized_events) == 0 and len(ephemeral) == 0:
+            logger.info("Returning early on transaction: no events to send")
+            return True
+
         try:
             await self.put_json(
                 uri=uri,
@@ -348,7 +353,19 @@ class ApplicationServiceApi(SimpleHttpClient):
     def _serialize(
         self, service: "ApplicationService", events: Iterable[EventBase]
     ) -> List[JsonDict]:
+        new_events = []
         time_now = self.clock.time_msec()
+
+        for event in events:
+            if int(round(time.time() * 1000)) - event.origin_server_ts > (15 * 60 * 1000):
+                logger.warning("Dropping event (due to age) %s" % event.event_id)
+                continue
+            if service.id != "github" and service.is_interested_in_user(event.sender) and event.sender.endswith(":t2bot.io"):
+                logger.warning("Dropping event (due to echo) %s" % event.event_id)
+                continue
+            logger.info("Allowing @ fallback: %s" % event.event_id)
+            new_events.append(event)
+
         return [
             serialize_event(
                 e,
@@ -367,5 +384,5 @@ class ApplicationServiceApi(SimpleHttpClient):
                     ),
                 ),
             )
-            for e in events
+            for e in new_events
         ]
