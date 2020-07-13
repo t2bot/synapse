@@ -20,6 +20,7 @@
 #
 #
 import logging
+import time
 import urllib.parse
 from typing import (
     TYPE_CHECKING,
@@ -383,6 +384,15 @@ class ApplicationServiceApi(SimpleHttpClient):
                 }
 
         labels = {"service": service.id, SERVER_NAME_LABEL: self.server_name}
+        has_events = len(serialized_events) > 0
+        has_edus = service.supports_ephemeral and len(ephemeral) > 0
+        has_device_list_changes = service.msc3202_transaction_extensions and (len(list(device_list_summary.changed)) > 0 or len(list(device_list_summary.left)) > 0)
+        has_messages = service.supports_ephemeral and len(to_device_messages) > 0
+        logger.info("Transaction properties: has_events=%s, has_edus=%s, has_device_list_changes=%s, has_messages=%s", has_events, has_edus, has_device_list_changes, has_messages)
+        if not has_events and not has_edus and not has_device_list_changes and not has_messages:
+            logger.info("Returning early on transaction: nothing to send.")
+            return True
+
         try:
             args = None
             if self.config.use_appservice_legacy_authorization:
@@ -543,9 +553,21 @@ class ApplicationServiceApi(SimpleHttpClient):
     async def _serialize(
         self, service: "ApplicationService", events: Iterable[EventBase]
     ) -> list[JsonDict]:
+        new_events = []
         time_now = self.clock.time_msec()
+
+        for event in events:
+            if int(round(time.time() * 1000)) - event.origin_server_ts > (15 * 60 * 1000):
+                logger.warning("Dropping event (due to age) %s" % event.event_id)
+                continue
+            if service.id != "github" and service.is_interested_in_user(event.sender) and event.sender.endswith(":t2bot.io"):
+                logger.warning("Dropping event (due to echo) %s" % event.event_id)
+                continue
+            logger.info("Allowing @ fallback: %s" % event.event_id)
+            new_events.append(event)
+
         return await self._event_serializer.serialize_events(
-            [FilteredEvent(event=e, membership=None) for e in events],
+            [FilteredEvent(event=e, membership=None) for e in new_events],
             time_now,
             config=SerializeEventConfig(
                 as_client_event=True,
