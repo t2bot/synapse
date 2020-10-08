@@ -1887,6 +1887,7 @@ class FederationHandler(BaseHandler):
 
         try:
             if (
+                False and
                 not event.internal_metadata.is_outlier()
                 and not backfilled
                 and not context.rejected
