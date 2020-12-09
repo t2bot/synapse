@@ -414,14 +414,24 @@ class FederationSendServlet(BaseFederationServlet):
                     continue
                 filtered_edus.append(edu)
 
-            logger.info(
-                "Received txn %s from %s. (PDUs: %d, Accepted EDUs: %d, Ignored EDUs: %d)",
-                transaction_id,
-                origin,
-                len(transaction_data.get("pdus", [])),
-                len(filtered_edus),
-                edus_before_filter - len(filtered_edus),
-            )
+            if origin == "matrix.org":
+                logger.info(
+                    "[T2B_DEBUG_MO] Received txn %s from %s. (PDUs: %d, Accepted EDUs: %d, Ignored EDUs: %d)",
+                    transaction_id,
+                    origin,
+                    len(transaction_data.get("pdus", [])),
+                    len(filtered_edus),
+                    edus_before_filter - len(filtered_edus),
+                )
+            else:
+                logger.info(
+                    "[T2B_DEBUG] Received txn %s from %s. (PDUs: %d, Accepted EDUs: %d, Ignored EDUs: %d)",
+                    transaction_id,
+                    origin,
+                    len(transaction_data.get("pdus", [])),
+                    len(filtered_edus),
+                    edus_before_filter - len(filtered_edus),
+                )
 
             transaction_data["edus"] = filtered_edus
 

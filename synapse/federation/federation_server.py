@@ -333,7 +333,10 @@ class FederationServer(FederationBase):
         # impose a limit to avoid going too crazy with ram/cpu.
 
         async def process_pdus_for_room(room_id: str):
-            logger.debug("Processing PDUs for %s", room_id)
+            if origin == "matrix.org":
+                logger.info("[T2B_DEBUG_MO] Processing PDUs for %s (PDUs: %d)", room_id, len(pdus_by_room[room_id]))
+            else:
+                logger.info("[T2B_DEBUG] Processing PDUs for %s (PDUs: %d)", room_id, len(pdus_by_room[room_id]))
             try:
                 await self.check_server_matches_acl(origin_host, room_id)
             except AuthError as e:
@@ -361,6 +364,11 @@ class FederationServer(FederationBase):
                                 event_id,
                                 exc_info=(f.type, f.value, f.getTracebackObject()),
                             )
+
+        if origin == "matrix.org":
+            logger.info("[T2B_DEBUG_MO] Processing %d/%d rooms concurrently", TRANSACTION_CONCURRENCY_LIMIT, len(list(pdus_by_room.keys())))
+        else:
+            logger.info("[T2B_DEBUG] Processing %d/%d rooms concurrently", TRANSACTION_CONCURRENCY_LIMIT, len(list(pdus_by_room.keys())))
 
         await concurrently_execute(
             process_pdus_for_room, pdus_by_room.keys(), TRANSACTION_CONCURRENCY_LIMIT
