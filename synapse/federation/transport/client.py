@@ -59,10 +59,11 @@ class TransportLayerClient:
             path=path,
             args={"event_id": event_id},
             try_trailing_slash_on_400=True,
+            timeout=180000,  # T2B: Use a different than normal timeout to assist in transaction speed
         )
 
     @log_function
-    def get_event(self, destination, event_id, timeout=None):
+    def get_event(self, destination, event_id, timeout=90000):  # T2B: Use a different than normal timeout to assist in transaction speed
         """ Requests the pdu with give id and origin from the given server.
 
         Args:
@@ -79,7 +80,7 @@ class TransportLayerClient:
 
         path = _create_v1_path("/event/%s", event_id)
         return self.client.get_json(
-            destination, path=path, timeout=timeout, try_trailing_slash_on_400=True
+            destination, path=path, timeout=timeout, try_trailing_slash_on_400=True,
         )
 
     @log_function
