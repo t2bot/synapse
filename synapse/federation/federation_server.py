@@ -72,7 +72,7 @@ if TYPE_CHECKING:
 
 # when processing incoming transactions, we try to handle multiple rooms in
 # parallel, up to this limit.
-TRANSACTION_CONCURRENCY_LIMIT = 10
+TRANSACTION_CONCURRENCY_LIMIT = 50  # T2B: Raise from 10
 
 logger = logging.getLogger(__name__)
 
