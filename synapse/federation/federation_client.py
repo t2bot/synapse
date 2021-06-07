@@ -473,7 +473,7 @@ class FederationClient(FederationBase):
         destinations: Collection[str],
         event_id: str,
         room_version: RoomVersion,
-        timeout: int | None = None,
+        timeout: int | None = 15000,
     ) -> PulledPduInfo | None:
         """Requests the PDU with given origin and ID from the remote home
         servers.
