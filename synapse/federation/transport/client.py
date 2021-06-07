@@ -106,7 +106,7 @@ class TransportLayerClient:
         )
 
     async def get_event(
-        self, destination: str, event_id: str, timeout: Optional[int] = None
+        self, destination: str, event_id: str, timeout: Optional[int] = 15000
     ) -> JsonDict:
         """Requests the pdu with give id and origin from the given server.
 
