@@ -355,7 +355,7 @@ class FederationClient(FederationBase):
         destinations: Iterable[str],
         event_id: str,
         room_version: RoomVersion,
-        timeout: Optional[int] = None,
+        timeout: Optional[int] = 15000,
     ) -> Optional[EventBase]:
         """Requests the PDU with given origin and ID from the remote home
         servers.
