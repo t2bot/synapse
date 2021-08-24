@@ -100,13 +100,31 @@ class FederationSendServlet(BaseFederationServerServlet):
 
             logger.debug("Decoded %s: %s", transaction_id, str(transaction_data))
 
+            edus_before_filter = len(transaction_data.get("edus", []))
+
+            filtered_edus = []
+            for edu in transaction_data.get("edus", []):
+                edu_type = edu.get('edu_type', 'io.t2bot.ignored')
+                if edu_type == 'io.t2bot.ignored':
+                    continue
+                if edu_type == 'm.presence':
+                    continue
+                if edu_type == 'm.receipt':
+                    continue
+                if edu_type == 'm.typing':
+                    continue
+                filtered_edus.append(edu)
+
             logger.info(
-                "Received txn %s from %s. (PDUs: %d, EDUs: %d)",
+                "Received txn %s from %s. (PDUs: %d, Accepted EDUs: %d, Ignored EDUs: %d)",
                 transaction_id,
                 origin,
                 len(transaction_data.get("pdus", [])),
-                len(transaction_data.get("edus", [])),
+                len(filtered_edus),
+                edus_before_filter - len(filtered_edus),
             )
+
+            transaction_data["edus"] = filtered_edus
 
             if issue_8631_logger.isEnabledFor(logging.DEBUG):
                 DEVICE_UPDATE_EDUS = [
