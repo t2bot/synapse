@@ -1462,9 +1462,10 @@ class EventCreationHandler:
             a room that has been un-partial stated.
         """
 
-        await self._bulk_push_rule_evaluator.action_for_events_by_user(
-            events_and_context
-        )
+        # T2B: Disable push processing.
+        #await self._bulk_push_rule_evaluator.action_for_events_by_user(
+        #    events_and_context
+        #)
 
         try:
             # If we're a worker we need to hit out to the master.
