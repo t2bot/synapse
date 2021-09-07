@@ -2101,7 +2101,7 @@ class FederationEventHandler:
         # persist_events_and_notify directly.)
         assert not event.internal_metadata.outlier
 
-        if not backfilled and not context.rejected:
+        if False and not backfilled and not context.rejected:
             min_depth = await self._store.get_min_depth(event.room_id)
             if min_depth is None or min_depth > event.depth:
                 # XXX richvdh 2021/10/07: I don't really understand what this
