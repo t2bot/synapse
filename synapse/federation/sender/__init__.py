@@ -998,6 +998,10 @@ class FederationSender(AbstractFederationSender):
             if self.is_mine_server_name(destination):
                 continue
 
+            # T2B: Skip sending presence to servers we know don't support it
+            if destination == "matrix.org":
+                continue
+
             queue = self._get_per_destination_queue(destination)
             if queue is None:
                 continue
