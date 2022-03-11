@@ -695,6 +695,11 @@ class FederationSender(AbstractFederationSender):
         for destination in destinations:
             if destination == self.server_name:
                 continue
+
+            # T2B: Skip sending presence to servers we know don't support it
+            if destination == "matrix.org":
+                continue
+
             if not self._federation_shard_config.should_handle(
                 self._instance_name, destination
             ):
