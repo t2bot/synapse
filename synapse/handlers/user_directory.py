@@ -70,7 +70,8 @@ class UserDirectoryHandler(StateDeltasHandler):
         # Guard to ensure we only process deltas one at a time
         self._is_processing = False
 
-        if self.update_user_directory:
+        # T2B: Disable user directory
+        if self.update_user_directory and False:
             self.notifier.add_replication_callback(self.notify_new_event)
 
             # We kick this off so that we don't have to wait for a change before
@@ -109,6 +110,11 @@ class UserDirectoryHandler(StateDeltasHandler):
 
     def notify_new_event(self) -> None:
         """Called when there may be more deltas to process"""
+
+        # T2B: Disable user directory
+        if True:
+            return
+
         if not self.update_user_directory:
             return
 
@@ -133,6 +139,10 @@ class UserDirectoryHandler(StateDeltasHandler):
         # FIXME(#3714): We should probably do this in the same worker as all
         # the other changes.
 
+        # T2B: Disable user directory
+        if True:
+            return
+
         if await self.store.should_include_local_user_in_dir(user_id):
             await self.store.update_profile_in_user_dir(
                 user_id, profile.display_name, profile.avatar_url
@@ -142,6 +152,11 @@ class UserDirectoryHandler(StateDeltasHandler):
         """Called when a user ID is deactivated"""
         # FIXME(#3714): We should probably do this in the same worker as all
         # the other changes.
+
+        # T2B: Disable user directory
+        if True:
+            return
+
         await self.store.remove_from_user_dir(user_id)
 
     async def _unsafe_process(self) -> None:
