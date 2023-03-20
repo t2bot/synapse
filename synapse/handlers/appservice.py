@@ -272,9 +272,10 @@ class ApplicationServicesHandler:
         # Only the following streams are currently supported.
         # FIXME: We should use constants for these values.
         if stream_key not in (
-            StreamKeyType.TYPING,
-            StreamKeyType.RECEIPT,
-            StreamKeyType.PRESENCE,
+            # T2B: Disable spammy ephemeral event streams
+            # StreamKeyType.TYPING,
+            # StreamKeyType.RECEIPT,
+            # StreamKeyType.PRESENCE,
             StreamKeyType.TO_DEVICE,
             StreamKeyType.DEVICE_LIST,
         ):
