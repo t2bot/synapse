@@ -683,6 +683,10 @@ class ProfileHandler:
         if not self.hs.is_mine(target_user):
             return
 
+        # T2B: don't update membership events for discord users
+        if target_user.to_string().startswith("@_discord"):
+            return
+
         await self.request_ratelimiter.ratelimit(requester)
 
         # Do not actually update the room state for shadow-banned users.
